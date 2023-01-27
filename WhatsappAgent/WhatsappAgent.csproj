@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net48;netstandard2.0</TargetFrameworks>
+    <Authors>MohammadFneish</Authors>
+    <Title>Whatsapp Agent</Title>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Copyright>2023</Copyright>
+    <Description>This is a Whatsapp message sending automation library using Selenium framework and Chrome driver, based on the Whatsapp web feature.</Description>
+    <PackageTags>Whatsapp, Automation, Selenium</PackageTags>
+    <PackageReleaseNotes>Bug Fixes</PackageReleaseNotes>
+    <AssemblyVersion>1.0.1</AssemblyVersion>
+    <FileVersion>1.0.1</FileVersion>
+    <PackageIcon>whatsapplogox128.png</PackageIcon>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/MohammadFneish7/WhatsappAgent</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/MohammadFneish7/WhatsappAgent</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!--<ImplicitUsings>enable</ImplicitUsings>-->
+    <!--<Nullable>enable</Nullable>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Selenium.Chrome.WebDriver" Version="85.0.0" />
+    <PackageReference Include="Selenium.Support" Version="4.8.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.8.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="109.0.5414.7400" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="whatsapplogox128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
