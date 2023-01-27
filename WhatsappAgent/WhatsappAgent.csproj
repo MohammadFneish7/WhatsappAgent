@@ -18,6 +18,7 @@
     <RepositoryUrl>https://github.com/MohammadFneish7/WhatsappAgent</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MohammadFneish7/WhatsappAgent</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.1</Version>
     <!--<ImplicitUsings>enable</ImplicitUsings>-->
     <!--<Nullable>enable</Nullable>-->
   </PropertyGroup>
