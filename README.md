@@ -14,3 +14,6 @@ Messegner.SendMedia(MediaType.ATTACHMENT, "70434962", "C:\\Users\\96170\\Desktop
 // Logout
 Messegner.Logout();
 ```
+
+# Support
+Please consider supporting my work [patreon](https://patreon.com/user?u=67136083&utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=creatorshare_creator&utm_content=join_link)
