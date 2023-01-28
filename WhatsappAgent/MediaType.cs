@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace WhatsappAgent
 {
-    public enum BrowserType
+    public enum MediaType
     {
-        CHROME=0,
-        FIREFOX=1
+        IMAGE_OR_VIDEO=0,
+        ATTACHMENT=1
     }
 }

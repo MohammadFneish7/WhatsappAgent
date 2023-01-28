@@ -1,10 +1,13 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.IE;
+using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 
 namespace WhatsappAgent
@@ -12,46 +15,57 @@ namespace WhatsappAgent
     public class Messegner
     {
         private const string BASE_URL = "https://web.whatsapp.com/";
-        private IWebDriver Driver;
+        private string codebase = Directory.GetParent(Assembly.GetExecutingAssembly().FullName).FullName;
+        private IWebDriver driver;
         private string handle;
 
         public bool IsDisposed { get; set; } = false;
+        public delegate void OnDisposedEventHandler();
+        public event OnDisposedEventHandler OnDisposed;
 
-        public Messegner(BrowserType browserType = BrowserType.CHROME)
+        public Messegner(BrowserType browserType = BrowserType.CHROME, uint login_timeout = 100)
         {
             try
             {
-                if(browserType== BrowserType.CHROME)
+
+                if (browserType== BrowserType.CHROME)
                 {
                     var options = new ChromeOptions()
                     {
                         LeaveBrowserRunning = false,
                         UnhandledPromptBehavior = UnhandledPromptBehavior.Accept,
                     };
-                    options.AddArgument("--log-level=3");
-                    Driver = new ChromeDriver(ChromeDriverService.CreateDefaultService(), options);
+                    options.AddArgument($"--user-data-dir={codebase.Replace("\\","\\\\")}\\\\UserData");
+                    var chromeDriverService = ChromeDriverService.CreateDefaultService();
+                    chromeDriverService.HideCommandPromptWindow = true;
+                    driver = new ChromeDriver(chromeDriverService, options);
                 }
-                else
+                else if(browserType == BrowserType.FIREFOX)
                 {
-                    throw new NotSupportedException("Browser not supported.");
-                }
+                    var firefoxDriverService = FirefoxDriverService.CreateDefaultService();
+                    firefoxDriverService.HideCommandPromptWindow = true;
 
-                Driver.Url = BASE_URL;
-
-                foreach (var handle in Driver.WindowHandles)
-                {
-                    if (handle != null && !handle.Equals(Driver.CurrentWindowHandle))
+                    driver = new FirefoxDriver(firefoxDriverService,new FirefoxOptions()
                     {
-                        Driver.SwitchTo().Window(handle);
-                        Driver.Close();
+                        LogLevel = FirefoxDriverLogLevel.Fatal,
+                        UnhandledPromptBehavior = UnhandledPromptBehavior.Accept,
+                    });
+                }
+
+                driver.Url = BASE_URL;
+
+                foreach (var handle in driver.WindowHandles)
+                {
+                    if (handle != null && !handle.Equals(driver.CurrentWindowHandle))
+                    {
+                        driver.SwitchTo().Window(handle);
+                        driver.Close();
                     }
                 }
 
-                handle = Driver.CurrentWindowHandle;
+                handle = driver.CurrentWindowHandle;
 
-                new WebDriverWait(Driver, TimeSpan.FromSeconds(100)).Until(x => !Driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector("[data-testid='input-placeholder']")).Count > 0);
-
-                checkWindowState();
+                WaitForCSSElemnt("[data-testid='input-placeholder']", login_timeout);
             }
             catch (Exception)
             {
@@ -64,7 +78,7 @@ namespace WhatsappAgent
         {
             try
             {
-                Driver.Dispose();
+                driver?.Dispose();
             }
             catch (Exception)
             {
@@ -72,24 +86,23 @@ namespace WhatsappAgent
             finally
             {
                 IsDisposed = true;
+                OnDisposed?.Invoke();
             }
         }
 
-        public void SendMessage(string number, string message)
+        public void SendMessage(string number, string message, uint load_timeout = 30, uint ticks_timeout = 10)
         {
             try
             {
-                Driver.Url = $"https://web.whatsapp.com/send?phone={number}&text&type=phone_number&app_absent=1";
+                CheckWindowState();
 
-                new WebDriverWait(Driver, TimeSpan.FromSeconds(10)).Until(x => !Driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector("[data-testid='conversation-compose-box-input']")).Count > 0);
+                driver.Url = $"https://web.whatsapp.com/send?phone={number}&text&type=phone_number&app_absent=1";
 
-                checkWindowState();
-
-                var textbox = Driver.FindElement(By.CssSelector("[data-testid='conversation-compose-box-input']"));
+                var textbox = WaitForCSSElemnt("[data-testid='conversation-compose-box-input']", load_timeout);
                 foreach (var line in message.Split('\n'))
                 {
                     textbox.SendKeys(line);
-                    var actions = new Actions(Driver);
+                    var actions = new Actions(driver);
                     actions.KeyDown(Keys.Shift);
                     actions.KeyDown(Keys.Enter);
                     actions.KeyUp(Keys.Enter);
@@ -98,8 +111,53 @@ namespace WhatsappAgent
                 }
                 textbox.SendKeys(Keys.Enter);
                 tryDismissAlert();
-                var timenow = DateTime.Now;
-                new WebDriverWait(Driver, TimeSpan.FromSeconds(10)).Until(x => DateTime.Now - timenow >= TimeSpan.FromMilliseconds(1000));
+
+                WaitForLastMessage(ticks_timeout);
+            }
+            catch (NoSuchWindowException)
+            {
+                Dispose();
+                throw;
+            }
+        }
+
+        public void SendMedia(MediaType mediaType, string number, string path, string caption=null, uint load_timeout = 30, uint ticks_timeout = 20)
+        {
+            try
+            {
+                CheckWindowState();
+
+                if (!File.Exists(path))
+                    throw new FileNotFoundException(path);
+
+                driver.Url = $"https://web.whatsapp.com/send?phone={number}&text&type=phone_number&app_absent=1";
+
+                WaitForCSSElemnt("[data-testid='conversation-compose-box-input']", load_timeout);
+
+                var clip = WaitForCSSElemnt("[data-testid='clip']");
+                clip.Click();
+
+                var attachImage = WaitForCSSElemnt($"[data-testid='{(mediaType == MediaType.IMAGE_OR_VIDEO ? "attach-image" : "attach-document")}']");
+                var fileinput = attachImage.FindElement(By.XPath("../input"));
+                fileinput.SendKeys(path);
+
+                var textbox = WaitForCSSElemnt("[data-testid='media-caption-input-container']");
+                if(!string.IsNullOrEmpty(caption))
+                    foreach (var line in caption.Split('\n'))
+                    {
+                        textbox.SendKeys(line);
+                        var actions = new Actions(driver);
+                        actions.KeyDown(Keys.Shift);
+                        actions.KeyDown(Keys.Enter);
+                        actions.KeyUp(Keys.Enter);
+                        actions.KeyUp(Keys.Shift);
+                        actions.Perform();
+                    }
+
+                textbox.SendKeys(Keys.Enter);
+                tryDismissAlert();
+
+                WaitForLastMessage(10);
             }
             catch (NoSuchWindowException)
             {
@@ -112,38 +170,27 @@ namespace WhatsappAgent
         {
             try
             {
-                var elms = Driver.FindElements(By.CssSelector("[data-testid='mi-logout menu-item']"));
+                var elms = driver.FindElements(By.CssSelector("[data-testid='mi-logout menu-item']"));
                 if (elms.Count > 0)
                 {
                     elms.First().Click();
-                    new WebDriverWait(Driver, TimeSpan.FromSeconds(3)).Until(x => !Driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector("[data-testid='popup-controls-ok']")).Count > 0);
-
-                    checkWindowState();
-
-                    var confirmBtn = Driver.FindElement(By.CssSelector("[data-testid='popup-controls-ok']"));
+                    var confirmBtn = WaitForCSSElemnt("[data-testid='popup-controls-ok']");
                     confirmBtn.Click();
-                    Thread.Sleep(4000);
+                    Wait(4);
                     Dispose();
                     return;
                 }
 
-                elms = Driver.FindElements(By.CssSelector("[data-testid='menu-bar-menu']"));
+                elms = driver.FindElements(By.CssSelector("[data-testid='menu-bar-menu']"));
                 if (elms.Count > 0)
                 {
                     elms.First().Click();
-                    new WebDriverWait(Driver, TimeSpan.FromSeconds(3)).Until(x => !Driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector("[data-testid='mi-logout menu-item']")).Count > 0);
-
-                    checkWindowState();
-
-                    var logoutBtn = Driver.FindElement(By.CssSelector("[data-testid='mi-logout menu-item']"));
+                    var logoutBtn = WaitForCSSElemnt("[data-testid='mi-logout menu-item']");
                     logoutBtn.Click();
-                    new WebDriverWait(Driver, TimeSpan.FromSeconds(3)).Until(x => !Driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector("[data-testid='popup-controls-ok']")).Count > 0);
 
-                    checkWindowState();
-
-                    var confirmBtn = Driver.FindElement(By.CssSelector("[data-testid='popup-controls-ok']"));
+                    var confirmBtn = WaitForCSSElemnt("[data-testid='popup-controls-ok']");
                     confirmBtn.Click();
-                    Thread.Sleep(4000);
+                    Wait(4);
                     Dispose();
                 }
                 else
@@ -158,9 +205,51 @@ namespace WhatsappAgent
             }
         }
 
-        private void checkWindowState()
+        private void Wait(uint seconds)
         {
-            if (!Driver.WindowHandles.Contains(handle)) {
+            var timenow = DateTime.Now;
+            new WebDriverWait(driver, TimeSpan.FromSeconds(seconds)).Until(x => DateTime.Now - timenow >= TimeSpan.FromMilliseconds(seconds * 1000));
+        }
+
+        private IWebElement WaitForCSSElemnt(string selector, uint timeout = 3)
+        {
+            new WebDriverWait(driver, TimeSpan.FromSeconds(timeout)).Until(x => !driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector(selector)).Count > 0);
+            CheckWindowState();
+            return driver.FindElement(By.CssSelector(selector));
+        }
+
+        private void WaitForLastMessage(uint seconds)
+        {
+            new WebDriverWait(driver, TimeSpan.FromSeconds(seconds)).Until(x => {
+                if (!driver.WindowHandles.Contains(handle))
+                    return true;
+
+                var elms = x.FindElements(By.CssSelector("[data-testid='msg-dblcheck']"));
+                if (elms.Count > 0)
+                {
+                    var label = elms.Last().GetAttribute("aria-label").ToLower().Trim();
+                    if (label.Equals("send") || label.Equals("delivered") || label.Equals("read"))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+
+            CheckWindowState();
+        }
+
+        private ReadOnlyCollection<IWebElement> WaitForCSSElemnts(string selector, int timeout = 3)
+        {
+            new WebDriverWait(driver, TimeSpan.FromSeconds(timeout)).Until(x => !driver.WindowHandles.Contains(handle) || x.FindElements(By.CssSelector(selector)).Count > 0);
+            CheckWindowState();
+            return driver.FindElements(By.CssSelector(selector));
+        }
+
+        private void CheckWindowState()
+        {
+            if (!driver.WindowHandles.Contains(handle)) {
                 Dispose();
                 throw new NoSuchWindowException("window closed.");
             }
@@ -170,7 +259,7 @@ namespace WhatsappAgent
         {
             try
             {
-                Driver.SwitchTo().Alert().Accept();
+                driver.SwitchTo().Alert().Accept();
             }
             catch (Exception)
             {
