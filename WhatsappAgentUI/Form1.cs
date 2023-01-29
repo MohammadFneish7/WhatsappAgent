@@ -10,9 +10,10 @@ namespace WhatsappAgentUI
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Messegner_OnQRReady(Image qrbmp)
         {
-            Messegner = new Messegner();
+            pictureBox1.Image = qrbmp;
+            textBox1.AppendLine("please scan the QR code using your Whatsapp mobile app to continue login.");
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -20,12 +21,12 @@ namespace WhatsappAgentUI
             try
             {
                 textBox1.AppendLine("sending text message...");
-                Messegner?.SendMessage("70434962", "Hello dear");
+                Messegner?.SendMessage(txtmobile.Text, textmsg.Text);
                 textBox1.AppendLine("text message sent.");
             }
             catch (Exception ex)
             {
-                textBox1.Text = ex.Message;
+                textBox1.AppendLine(ex.Message);
             }
         }
 
@@ -33,13 +34,25 @@ namespace WhatsappAgentUI
         {
             try
             {
-                textBox1.AppendLine("sending image...");
-                Messegner?.SendMedia(MediaType.IMAGE_OR_VIDEO, "70434962", "C:\\Users\\96170\\Desktop\\WhatsApp Image 2022-11-28 at 19.20.48.jpg", "this is an image");
-                textBox1.AppendLine("image sent.");
+                OpenFileDialog openFileDialog1 = new OpenFileDialog
+                {
+                    Title = "Select Image File",
+                    CheckFileExists = true,
+                    CheckPathExists = true,
+                    Filter = "Images (*.BMP;*.JPG,*.PNG)|*.BMP;*.JPG;*.PNG;",
+                    Multiselect = false
+                };
+
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    textBox1.AppendLine("sending image...");
+                    Messegner?.SendMedia(MediaType.IMAGE_OR_VIDEO, txtmobile.Text, openFileDialog1.FileName, textmsg.Text);
+                    textBox1.AppendLine("image sent.");
+                }
             }
             catch (Exception ex)
             {
-                textBox1.Text = ex.Message;
+                textBox1.AppendLine(ex.Message);
             }
         }
 
@@ -47,13 +60,23 @@ namespace WhatsappAgentUI
         {
             try
             {
-                textBox1.AppendLine("sending attachment...");
-                Messegner?.SendMedia(MediaType.ATTACHMENT, "70434962", "C:\\Users\\96170\\Desktop\\WhatsApp Image 2022-11-28 at 19.20.48.jpg", "");
-                textBox1.AppendLine("attachment sent.");
+                OpenFileDialog openFileDialog1 = new OpenFileDialog
+                {
+                    Title = "Select Attachment",
+                    CheckFileExists = true,
+                    CheckPathExists = true,
+                    Multiselect = false
+                };
+
+                if (openFileDialog1.ShowDialog() == DialogResult.OK) { 
+                    textBox1.AppendLine("sending attachment...");
+                    Messegner?.SendMedia(MediaType.ATTACHMENT, txtmobile.Text, openFileDialog1.FileName, textmsg.Text);
+                    textBox1.AppendLine("attachment sent.");
+                }
             }
             catch (Exception ex)
             {
-                textBox1.Text = ex.Message;
+                textBox1.AppendLine(ex.Message);
             }
         }
 
@@ -67,7 +90,7 @@ namespace WhatsappAgentUI
             }
             catch (Exception ex)
             {
-                textBox1.Text = ex.Message;
+                textBox1.AppendLine(ex.Message);
             }
             finally
             {
@@ -81,6 +104,51 @@ namespace WhatsappAgentUI
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             Messegner?.Dispose();
+        }
+
+        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+           Messegner?.Login();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            button5.Enabled = false;
+            textBox1.AppendLine("logging in...");
+            backgroundWorker1.RunWorkerAsync();
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            if(e.Error != null)
+            {
+                textBox1.AppendLine(e.Error.ToString());
+            }
+            else
+            {
+                button1.Enabled = true;
+                button2.Enabled = true;
+                button3.Enabled = true;
+                button4.Enabled = true;
+            }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                checkBox1.Enabled = false;
+                button6.Enabled = false;
+                textBox1.AppendLine("starting driver...");
+                Messegner = new Messegner(checkBox1.Checked);
+                Messegner.OnQRReady += Messegner_OnQRReady;
+                textBox1.AppendLine("driver started.");
+                button5.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                textBox1.AppendLine(ex.Message);
+            }
         }
     }
 }

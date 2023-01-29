@@ -10,7 +10,7 @@ namespace WhatsappAgentUI
     {
         public static void AppendLine(this TextBox textBox, string line)
         {
-            textBox.Text = (textBox.Text + Environment.NewLine + line.Replace("\n", Environment.NewLine)).Trim();
+            textBox.Text = textBox.Text + line.Replace("\n", Environment.NewLine) + Environment.NewLine;
             if (textBox.Visible)
             {
                 textBox.SelectionStart = textBox.TextLength;
