@@ -1,5 +1,5 @@
 # WhatsappAgent
-This is a Whatsapp message sending automation library using Selenium framework, based on the Whatsapp web app. Try the [Demo App](https://raw.githubusercontent.com/MohammadFneish7/WhatsappAgent/main/WhatsappAgentUI/WhatsappAgent-Demo.zip).
+This is a Whatsapp message sending automation library using Selenium framework, based on the Whatsapp web app. Get and try the demo App from the [latest release](https://github.com/MohammadFneish7/WhatsappAgent/releases/latest).
 
 # Usage
 ```
