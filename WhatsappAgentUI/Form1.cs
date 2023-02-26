@@ -13,7 +13,7 @@ namespace WhatsappAgentUI
         private void Messegner_OnQRReady(Image qrbmp)
         {
             pictureBox1.Image = qrbmp;
-            textBox1.AppendLine("please scan the QR code using your Whatsapp mobile app to continue login.");
+            textBox1.Invoke(() => textBox1.AppendLine("please scan the QR code using your Whatsapp mobile app to continue login."));
         }
 
         private void button1_Click(object sender, EventArgs e)

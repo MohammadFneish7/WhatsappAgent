@@ -3,8 +3,12 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Common;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,16 +39,29 @@ namespace WhatsappAgent
                     LeaveBrowserRunning = false,
                     UnhandledPromptBehavior = UnhandledPromptBehavior.Accept,
                 };
-                options.AddArgument($"--user-data-dir={codebase.Replace("\\","\\\\")}\\\\UserData");
+
+                var chromeDir = Path.Combine(codebase, "chrome");
+                var chromeExe = new FileInfo(Path.Combine(codebase, "chrome\\chrome.exe")); 
+                var chromeDll = new FileInfo(Path.Combine(codebase, "chrome\\chrome.dll"));
+                var chromeZip = new FileInfo(Path.Combine(codebase, "chrome\\chrome.zip"));
+
+                if (!chromeDll.Exists)
+                {
+                    System.IO.Compression.ZipFile.ExtractToDirectory(chromeZip.FullName, chromeDir);
+                }
+
+                options.BinaryLocation = chromeExe.FullName;
+
+                options.AddArgument($"--user-data-dir={codebase.Replace("\\","\\\\")}\\\\Chrome\\\\UserData");
                 if (hideWindow) {
                     options.AddArgument("--headless");
                     options.AddArgument("--disable-gpu");
-                    options.AddArgument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+                    options.AddArgument("--no-sandbox");
+                    options.AddArgument($"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{FileVersionInfo.GetVersionInfo(chromeExe.FullName).ProductVersion.Split('.')[0]}.0.0.0 Safari/537.36");
                 }
-                var chromeDriverService = ChromeDriverService.CreateDefaultService();
+                var chromeDriverService = ChromeDriverService.CreateDefaultService(chromeDir);
                 chromeDriverService.HideCommandPromptWindow = true;
-                driver = new ChromeDriver(chromeDriverService, options);
-
+                driver = new ChromeDriver(chromeDriverService, options, TimeSpan.FromSeconds(100));
             }
             catch (Exception)
             {
@@ -159,12 +176,19 @@ namespace WhatsappAgent
             }
             finally
             {
-                IsDisposed = true;
-                OnDisposed?.Invoke();
+                try
+                {
+                    IsDisposed = true;
+                    OnDisposed?.Invoke();
+                }
+                catch (Exception)
+                {
+                    
+                }
             }
         }
 
-        public void SendMessage(string number, string message, uint load_timeout = 30, uint ticks_timeout = 10)
+        public void SendMessage(string number, string message, uint load_timeout = 30, uint ticks_timeout = 10, uint wait_after_send=2)
         {
             try
             {
@@ -193,6 +217,7 @@ namespace WhatsappAgent
                 TryDismissAlert();
 
                 WaitForLastMessage(ticks_timeout);
+                Wait(wait_after_send);
             }
             catch (NoSuchWindowException)
             {
