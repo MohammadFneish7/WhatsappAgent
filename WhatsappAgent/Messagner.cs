@@ -333,11 +333,11 @@ namespace WhatsappAgent
                 if (!CheckWindowState(false))
                     return true;
 
-                var elms = x.FindElements(By.CssSelector("[data-testid='msg-dblcheck']"));
+                var elms = x.FindElements(By.CssSelector(".message-out"));
                 if (elms.Count > 0)
                 {
-                    var label = elms.Last().GetAttribute("aria-label").ToLower().Trim();
-                    if (label.Equals("send") || label.Equals("delivered") || label.Equals("read"))
+                    var labels = elms.Last().FindElements(By.CssSelector("[data-testid='msg-dblcheck'], [data-testid='msg-check']"));
+                    if (labels.Count > 0)
                     {
                         return true;
                     }

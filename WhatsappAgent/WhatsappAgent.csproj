@@ -9,8 +9,8 @@
     <Description>This is a Whatsapp messaging automation library using Selenium framework, based on the Whatsapp web application.</Description>
     <PackageTags>Whatsapp, Automation, Selenium</PackageTags>
     <PackageReleaseNotes>Bug Fixes</PackageReleaseNotes>
-    <AssemblyVersion>1.1.3</AssemblyVersion>
-    <FileVersion>1.1.3</FileVersion>
+    <AssemblyVersion>1.1.4</AssemblyVersion>
+    <FileVersion>1.1.4</FileVersion>
     <PackageIcon>whatsapplogox128.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -18,7 +18,7 @@
     <RepositoryUrl>https://github.com/MohammadFneish7/WhatsappAgent</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MohammadFneish7/WhatsappAgent</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.1.3</Version>
+    <Version>1.1.4</Version>
   </PropertyGroup>
 
   <ItemGroup>

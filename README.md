@@ -26,6 +26,9 @@ Messegner.OnQRReady += Messegner_OnQRReady;
 // Open web.whatsapp.com and try to login
 Messegner.Login();
 
+// Send text message
+Messegner.SendMessage("70434962", "This is a text message");
+
 // Send image or video
 Messegner.SendMedia(MediaType.IMAGE_OR_VIDEO, "70434962", "C:\\Users\\96170\\Desktop\\WhatsApp Image 2022-11-28 at 19.20.48.jpg", "this is an image with caption");
 
