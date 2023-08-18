@@ -246,8 +246,8 @@ namespace WhatsappAgent
                 var clip = WaitForCSSElemnt("[data-testid='conversation-clip']");
                 clip.Click();
 
-                var attachImage = WaitForCSSElemnt($"[data-testid='{(mediaType == MediaType.IMAGE_OR_VIDEO ? "attach-image" : "attach-document")}']");
-                var fileinput = attachImage.FindElement(By.XPath("../input"));
+                //var attachImage = WaitForCSSElemnt($"[data-testid='{(mediaType == MediaType.IMAGE_OR_VIDEO ? "attach-image" : "attach-document")}']");
+                var fileinput = WaitForCSSElemnt("input[type=file]");
                 fileinput.SendKeys(path);
 
                 var textbox = WaitForCSSElemnt("[data-testid='media-caption-input-container']");
