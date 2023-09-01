@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web;
 using Image = System.Drawing.Image;
 
 namespace WhatsappAgent
@@ -17,6 +18,7 @@ namespace WhatsappAgent
     {
         private const string BASE_URL = "https://web.whatsapp.com";
         private readonly string codebase = Directory.GetParent(Assembly.GetExecutingAssembly().FullName).FullName;
+        private readonly string tempPath = Path.GetTempPath();
         private readonly IWebDriver driver;
         private string handle;
 
@@ -49,7 +51,7 @@ namespace WhatsappAgent
 
                 options.BinaryLocation = chromeExe.FullName;
 
-                options.AddArgument($"--user-data-dir={codebase.Replace("\\","\\\\")}\\\\Chrome\\\\UserData");
+                options.AddArgument($"--user-data-dir={tempPath.Replace("\\","\\\\")}\\\\Chrome\\\\UserData");
                 if (hideWindow) {
                     options.AddArgument("--headless");
                     options.AddArgument("--disable-gpu");
@@ -101,7 +103,7 @@ namespace WhatsappAgent
                 if (!CheckWindowState(false))
                     return true;
 
-                var elms = x.FindElements(By.CssSelector("[data-testid='input-placeholder']"));
+                var elms = x.FindElements(By.CssSelector("#side"));
                 if (elms.Count() > 0)
                     return true;
 
@@ -197,19 +199,19 @@ namespace WhatsappAgent
 
                 CheckWindowState();
 
-                driver.Url = $"https://web.whatsapp.com/send?phone={number}&text&type=phone_number&app_absent=1";
+                driver.Url = $"https://web.whatsapp.com/send?phone={number}&text={HttpUtility.UrlEncode(message)}&type=phone_number&app_absent=1";
 
-                var textbox = WaitForCSSElemnt("[data-testid='conversation-compose-box-input']", load_timeout);
-                foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
-                {
-                    textbox.SendKeys(line);
-                    var actions = new Actions(driver);
-                    actions.KeyDown(Keys.Shift);
-                    actions.KeyDown(Keys.Enter);
-                    actions.KeyUp(Keys.Enter);
-                    actions.KeyUp(Keys.Shift);
-                    actions.Perform();
-                }
+                var textbox = WaitForCSSElemnt("[title='Type a message']", load_timeout);
+                //foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
+                //{
+                //    textbox.SendKeys(line);
+                //    var actions = new Actions(driver);
+                //    actions.KeyDown(Keys.Shift);
+                //    actions.KeyDown(Keys.Enter);
+                //    actions.KeyUp(Keys.Enter);
+                //    actions.KeyUp(Keys.Shift);
+                //    actions.Perform();
+                //}
                 textbox.SendKeys(Keys.Enter);
                 TryDismissAlert();
 
@@ -241,17 +243,17 @@ namespace WhatsappAgent
 
                 driver.Url = $"https://web.whatsapp.com/send?phone={number}&text&type=phone_number&app_absent=1";
 
-                WaitForCSSElemnt("[data-testid='conversation-compose-box-input']", load_timeout);
+                WaitForCSSElemnt("[title='Type a message']", load_timeout);
 
-                var clip = WaitForCSSElemnt("[data-testid='conversation-clip']");
+                var clip = WaitForCSSElemnt("[title='Attach']");
                 clip.Click();
 
-                var attachImage = WaitForCSSElemnt($"[data-testid='{(mediaType == MediaType.IMAGE_OR_VIDEO ? "attach-image" : "attach-document")}']");
-                var fileinput = attachImage.FindElement(By.XPath("../input"));
+                var fileinput = WaitForCSSElemnt($"{(mediaType == MediaType.IMAGE_OR_VIDEO ? "input[accept*='image']" : "input[accept='*']")}");
                 fileinput.SendKeys(path);
 
-                var textbox = WaitForCSSElemnt("[data-testid='media-caption-input-container']");
-                if(!string.IsNullOrEmpty(caption))
+                var textbox = WaitForCSSElemnt("[title='Type a message']");
+                Wait(3); 
+                if (!string.IsNullOrEmpty(caption))
                     foreach (var line in caption.Split('\n').Where(x=>x.Trim().Length>0))
                     {
                         textbox.SendKeys(line);
@@ -279,27 +281,16 @@ namespace WhatsappAgent
         {
             try
             {
-                var elms = driver.FindElements(By.CssSelector("[data-testid='mi-logout menu-item']"));
+                var elms = driver.FindElements(By.CssSelector("header [title='Menu']"));
                 if (elms.Count > 0)
                 {
                     elms.First().Click();
-                    var confirmBtn = WaitForCSSElemnt("[data-testid='popup-controls-ok']");
-                    confirmBtn.Click();
-                    Wait(4);
-                    Dispose();
-                    return;
-                }
-
-                elms = driver.FindElements(By.CssSelector("[data-testid='menu-bar-menu']"));
-                if (elms.Count > 0)
-                {
-                    elms.First().Click();
-                    var logoutBtn = WaitForCSSElemnt("[data-testid='mi-logout menu-item']");
+                    var logoutBtn = WaitForCSSElemnt("[aria-label='Log out']");
                     logoutBtn.Click();
 
-                    var confirmBtn = WaitForCSSElemnt("[data-testid='popup-controls-ok']");
+                    var confirmBtn = WaitForCSSElemnt("[role='dialog'] button:nth-child(2)");
                     confirmBtn.Click();
-                    Wait(4);
+                    Wait(8);
                     Dispose();
                 }
                 else
@@ -336,7 +327,7 @@ namespace WhatsappAgent
                 var elms = x.FindElements(By.CssSelector(".message-out"));
                 if (elms.Count > 0)
                 {
-                    var labels = elms.Last().FindElements(By.CssSelector("[data-testid='msg-dblcheck'], [data-testid='msg-check']"));
+                    var labels = elms.Last().FindElements(By.CssSelector("[data-icon='msg-dblcheck'], [data-icon='msg-check']"));
                     if (labels.Count > 0)
                     {
                         return true;
