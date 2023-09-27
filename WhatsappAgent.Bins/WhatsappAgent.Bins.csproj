@@ -1,12 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Mohammad Abdul-Karim Fneish</Authors>
-    <Title>Whatsapp Agent</Title>
+    <Title>Whatsapp Agent Bins</Title>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Copyright>2023</Copyright>
-    <Description>This is a Whatsapp messaging automation library using Selenium framework, based on the Whatsapp web application.</Description>
+    <Description>This is the WhatsappAgent browser binaries package.</Description>
     <PackageTags>Whatsapp, Automation, Selenium</PackageTags>
     <PackageReleaseNotes>Bug Fixes</PackageReleaseNotes>
     <AssemblyVersion>1.1.5</AssemblyVersion>
@@ -20,19 +20,29 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Version>1.1.5</Version>
   </PropertyGroup>
-
+  
   <ItemGroup>
-    <None Remove="WhatsappAgent.targets" />
+    <Content Include="chrome\**" Pack="true" PackagePath="contentFiles/any/netstandard2.0/chrome">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="WhatsappAgent.targets">
+      <PackagePath>build/WhatsappAgent.targets</PackagePath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>True</Pack>
-      <PackagePath>build/WhatsappAgent.targets</PackagePath>
     </Content>
   </ItemGroup>
- 
+  
+  <ItemGroup>
+    <None Update="whatsapplogox128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
   <ItemGroup>
     <None Include="..\LICENSE">
       <Pack>True</Pack>
@@ -47,23 +57,4 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="RandomUserAgent" Version="1.1.2" />
-    <PackageReference Include="Selenium.Support" Version="4.8.1" />
-    <PackageReference Include="Selenium.WebDriver" Version="4.8.1" />
-    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\WhatsappAgent.Bins\WhatsappAgent.Bins.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="whatsapplogox128.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
-
 </Project>

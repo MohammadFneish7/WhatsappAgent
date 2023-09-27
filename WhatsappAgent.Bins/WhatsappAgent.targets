@@ -1,0 +1,8 @@
+﻿<Project>
+  <ItemGroup>
+    <Files Include="$(MSBuildThisFileDirectory)/../contentFiles/any/netstandard2.0/chrome/**/*.*" />
+  </ItemGroup>
+  <Target Name="CopyFiles" AfterTargets="Build">
+    <Copy SourceFiles="@(Files)" DestinationFolder="$(TargetDir)/chrome/%(RecursiveDir)" />
+  </Target>
+</Project>
