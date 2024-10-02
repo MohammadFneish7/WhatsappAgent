@@ -191,7 +191,7 @@ namespace WhatsappAgent
 		{
 			try
 			{
-				var textbox = driver.FindElement(By.CssSelector("[aria-label=\"Send\"]"));
+				var textbox = driver.FindElement(By.CssSelector("[aria-placeholder=\"Type a message\"]"));
                 foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
                 {
                     textbox.SendKeys(line);
@@ -229,7 +229,7 @@ namespace WhatsappAgent
 
                 driver.Url = $"https://web.whatsapp.com/send?phone={number}&text={HttpUtility.UrlEncode(message)}&type=phone_number&app_absent=1";
 
-                var textbox = WaitForCSSElemnt("[aria-label=\"Send\"]", load_timeout);
+                var textbox = WaitForCSSElemnt("[aria-placeholder=\"Type a message\"]", load_timeout);
                 //foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
                 //{
                 //    textbox.SendKeys(line);
