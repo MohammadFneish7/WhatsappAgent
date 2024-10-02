@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using TextCopy;
+using static System.Net.Mime.MediaTypeNames;
 using Image = System.Drawing.Image;
 
 namespace WhatsappAgent
@@ -187,22 +189,38 @@ namespace WhatsappAgent
             }
         }
 
-		public void SendMessageInCurrentChat(string message, uint ticks_timeout = 10, uint wait_after_send = 2)
+		public void SendMessageInCurrentChat(string message, bool useClipboard = false, uint ticks_timeout = 10, uint wait_after_send = 2)
 		{
 			try
 			{
 				var textbox = driver.FindElement(By.CssSelector("[aria-placeholder=\"Type a message\"]"));
-                foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
+
+                if (useClipboard)
+				{
+					ClipboardService.SetText(message);
+
+					Actions actions = new Actions(driver);
+					actions.Click(textbox)
+					   .KeyDown(Keys.Control)
+					   .SendKeys("v") // Paste text
+					   .KeyUp(Keys.Control)
+					   .Perform();
+				}
+                else
                 {
-                    textbox.SendKeys(line);
-                    var actions = new Actions(driver);
-                    actions.KeyDown(Keys.Shift);
-                    actions.KeyDown(Keys.Enter);
-                    actions.KeyUp(Keys.Enter);
-                    actions.KeyUp(Keys.Shift);
-                    actions.Perform();
+                    foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
+                    {
+                        textbox.SendKeys(line);
+                        var actions = new Actions(driver);
+                        actions.KeyDown(Keys.Shift);
+                        actions.KeyDown(Keys.Enter);
+                        actions.KeyUp(Keys.Enter);
+                        actions.KeyUp(Keys.Shift);
+                        actions.Perform();
+                    }
                 }
-                textbox.SendKeys(Keys.Enter);
+
+				textbox.SendKeys(Keys.Enter);
 				TryDismissAlert();
 
 				WaitForLastMessage(ticks_timeout);
