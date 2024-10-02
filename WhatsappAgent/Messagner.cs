@@ -187,7 +187,35 @@ namespace WhatsappAgent
             }
         }
 
-        public void SendMessage(string number, string message, uint load_timeout = 30, uint ticks_timeout = 10, uint wait_after_send=2)
+		public void SendMessageInCurrentChat(string message, uint ticks_timeout = 10, uint wait_after_send = 2)
+		{
+			try
+			{
+				var textbox = driver.FindElement(By.CssSelector("[aria-label=\"Send\"]"));
+                foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
+                {
+                    textbox.SendKeys(line);
+                    var actions = new Actions(driver);
+                    actions.KeyDown(Keys.Shift);
+                    actions.KeyDown(Keys.Enter);
+                    actions.KeyUp(Keys.Enter);
+                    actions.KeyUp(Keys.Shift);
+                    actions.Perform();
+                }
+                textbox.SendKeys(Keys.Enter);
+				TryDismissAlert();
+
+				WaitForLastMessage(ticks_timeout);
+				Wait(wait_after_send);
+			}
+			catch (NoSuchWindowException)
+			{
+				Dispose();
+				throw;
+			}
+		}
+
+		public void SendMessage(string number, string message, uint load_timeout = 30, uint ticks_timeout = 10, uint wait_after_send=2)
         {
             try
             {

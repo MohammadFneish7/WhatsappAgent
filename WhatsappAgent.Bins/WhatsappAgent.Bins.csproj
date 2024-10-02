@@ -9,8 +9,8 @@
     <Description>This is the WhatsappAgent browser binaries package.</Description>
     <PackageTags>Whatsapp, Automation, Selenium</PackageTags>
     <PackageReleaseNotes>Bug Fixes</PackageReleaseNotes>
-    <AssemblyVersion>1.1.6</AssemblyVersion>
-    <FileVersion>1.1.6</FileVersion>
+    <AssemblyVersion>1.1.8</AssemblyVersion>
+    <FileVersion>1.1.8</FileVersion>
     <PackageIcon>whatsapplogox128.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -18,11 +18,11 @@
     <RepositoryUrl>https://github.com/MohammadFneish7/WhatsappAgent</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MohammadFneish7/WhatsappAgent</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.1.6</Version>
+    <Version>1.1.8</Version>
   </PropertyGroup>
   
   <ItemGroup>
-    <Content Include="chrome\**" Pack="true" PackagePath="contentFiles/any/netstandard2.0/chrome">
+    <Content Include="chrome\**" Pack="true" PackagePath="contentFiles/chrome">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
