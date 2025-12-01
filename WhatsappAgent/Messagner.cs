@@ -247,7 +247,7 @@ namespace WhatsappAgent
 
                 driver.Url = $"https://web.whatsapp.com/send?phone={number}&text={HttpUtility.UrlEncode(message)}&type=phone_number&app_absent=1";
 
-                var textbox = WaitForCSSElemnt("[aria-placeholder=\"Type a message\"]", load_timeout);
+                var textbox = WaitForCSSElemnt("[aria-placeholder=\"Type a message\"], [aria-placeholder=\"اكتب رسالة\"]", load_timeout);
                 //foreach (var line in message.Split('\n').Where(x => x.Trim().Length > 0))
                 //{
                 //    textbox.SendKeys(line);
